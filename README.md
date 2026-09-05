@@ -23,7 +23,7 @@ but no simulated gateway is enabled in production.
 
 - `api`: FastAPI HTTP API and health checks
 - `bot`: aiogram Telegram bot
-- `worker`: reliable background-job process
+- `worker`: background-job entry point; transactional outbox processing is an M1 follow-up
 - `db`: PostgreSQL 16
 - `redis`: Redis queue and coordination service
 - `PanelAdapter`: common boundary for Marzban and Sanaei/3x-ui
