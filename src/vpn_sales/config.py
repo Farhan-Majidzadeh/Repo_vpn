@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     payment_provider: str = ""
     payment_merchant_id: str = ""
     payment_callback_base_url: str = ""
+    marzban_primary_base_url: str = ""
+    marzban_primary_username: str = ""
+    marzban_primary_password: str = ""
 
     @property
     def private_beta_ids(self) -> frozenset[int]:

@@ -29,6 +29,11 @@ but no simulated gateway is enabled in production.
 - `PanelAdapter`: common boundary for Marzban and Sanaei/3x-ui
 - `PaymentProvider`: gateway-neutral payment boundary
 
+The production path is Marzban-first. The Marzban adapter uses one reusable
+asynchronous HTTP connection pool, serializes token refresh, classifies upstream
+failures, and reconciles deterministic usernames before creating users. The
+3x-ui boundary is retained only as an optional future extension.
+
 The platform distinguishes a panel from a provisioning target. A Marzban
 target can represent a panel plus a user/inbound/host policy, while a 3x-ui
 target can represent a panel plus a group of inbound IDs.
@@ -67,6 +72,6 @@ pytest
 ## Current status
 
 This branch contains the M1 foundation: runnable services, initial database
-schema, package catalog endpoint, bot entry point, adapter contracts, allocation
-policy, and tests. Real payment and panel integrations remain subsequent M1
-issues.
+schema, package catalog endpoint, bot entry point, allocation policy, and an
+official-API Marzban adapter with isolated contract tests. Live panel validation
+and the real payment integration remain subsequent M1 work.

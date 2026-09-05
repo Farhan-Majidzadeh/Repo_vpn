@@ -25,6 +25,26 @@ class ProvisionResult:
     subscription_url: str
 
 
+class PanelError(RuntimeError):
+    """Base class for normalized upstream panel failures."""
+
+
+class RetryablePanelError(PanelError):
+    """A transient failure that is safe to retry."""
+
+
+class PermanentPanelError(PanelError):
+    """A rejected request that requires data or configuration changes."""
+
+
+class PanelNotFoundError(PermanentPanelError):
+    """The requested remote service does not exist."""
+
+
+class UnknownProvisionResultError(PanelError):
+    """The create outcome is unknown and must be reconciled before retrying."""
+
+
 class PanelAdapter(ABC):
     @abstractmethod
     async def health_check(self) -> PanelHealth:
@@ -54,10 +74,6 @@ class PanelAdapter(ABC):
     async def get_usage_bytes(self, external_id: str) -> int:
         raise NotImplementedError
 
-
-class MarzbanAdapter(PanelAdapter):
-    """M1 boundary; HTTP implementation follows after test-panel access."""
-
-
-class ThreeXUIAdapter(PanelAdapter):
-    """M1 boundary; HTTP implementation follows after test-panel access."""
+    @abstractmethod
+    async def aclose(self) -> None:
+        raise NotImplementedError
