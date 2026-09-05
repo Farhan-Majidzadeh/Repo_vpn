@@ -8,6 +8,7 @@ import httpx
 
 from vpn_sales.panels.base import (
     PanelAdapter,
+    PanelError,
     PanelHealth,
     PanelNotFoundError,
     PermanentPanelError,
@@ -127,7 +128,7 @@ class MarzbanAdapter(PanelAdapter):
         started = time.monotonic()
         try:
             await self._request("GET", "/api/system")
-        except Exception as exc:  # Health checks return state instead of breaking schedulers.
+        except (PanelError, ValueError) as exc:
             return PanelHealth(healthy=False, detail=type(exc).__name__)
         latency_ms = round((time.monotonic() - started) * 1000)
         return PanelHealth(healthy=True, latency_ms=latency_ms)
