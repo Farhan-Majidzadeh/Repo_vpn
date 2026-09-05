@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from redis.asyncio import Redis
@@ -11,6 +12,7 @@ from vpn_sales.models import Package
 
 settings = get_settings()
 redis = Redis.from_url(settings.redis_url, decode_responses=True)
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 @asynccontextmanager
@@ -28,14 +30,14 @@ async def live() -> dict[str, str]:
 
 
 @app.get("/health/ready")
-async def ready(session: AsyncSession = Depends(get_session)) -> dict[str, str]:
+async def ready(session: SessionDep) -> dict[str, str]:
     await session.execute(text("SELECT 1"))
     await redis.ping()
     return {"status": "ready"}
 
 
 @app.get("/api/v1/packages")
-async def packages(session: AsyncSession = Depends(get_session)) -> list[dict]:
+async def packages(session: SessionDep) -> list[dict]:
     result = await session.execute(
         select(Package).where(Package.is_active.is_(True)).order_by(Package.traffic_bytes)
     )
