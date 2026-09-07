@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException
+import secrets
+from fastapi import FastAPI, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from .config import get_settings
 from .db import Base, engine, get_db
 from . import models, schemas
 from .service import create_subscription
@@ -48,8 +50,15 @@ def get_user_by_telegram(telegram_id: int, db: Session = Depends(get_db)):
     return user
 
 
+def require_admin(request: Request):
+    supplied = request.headers.get("X-Admin-Key", "")
+    expected = get_settings().app_secret
+    if not expected or expected == "dev-only-change-me" or not secrets.compare_digest(supplied, expected):
+        raise HTTPException(403, "admin authorization required")
+
+
 @app.post("/api/plans", response_model=schemas.PlanOut)
-def create_plan(payload: schemas.PlanCreate, db: Session = Depends(get_db)):
+def create_plan(payload: schemas.PlanCreate, db: Session = Depends(get_db), _=Depends(require_admin)):
     plan = models.Plan(**payload.model_dump())
     db.add(plan)
     db.commit()
@@ -63,7 +72,7 @@ def list_plans(db: Session = Depends(get_db)):
 
 
 @app.post("/api/subscriptions", response_model=schemas.SubscriptionOut)
-def provision_subscription(payload: schemas.SubscriptionCreate, db: Session = Depends(get_db)):
+def provision_subscription(payload: schemas.SubscriptionCreate, db: Session = Depends(get_db), _=Depends(require_admin)):
     user = db.get(models.User, payload.user_id)
     plan = db.get(models.Plan, payload.plan_id)
     if not user or not plan:
