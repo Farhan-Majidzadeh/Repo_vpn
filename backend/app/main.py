@@ -53,7 +53,11 @@ def get_user_by_telegram(telegram_id: int, db: Session = Depends(get_db)):
 def require_admin(request: Request):
     supplied = request.headers.get("X-Admin-Key", "")
     expected = get_settings().app_secret
-    if not expected or expected == "dev-only-change-me" or not secrets.compare_digest(supplied, expected):
+    if (
+        not expected
+        or expected == "dev-only-change-me"
+        or not secrets.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8"))
+    ):
         raise HTTPException(403, "admin authorization required")
 
 
