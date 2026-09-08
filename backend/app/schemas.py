@@ -45,3 +45,29 @@ class SubscriptionOut(BaseModel):
     starts_at: datetime | None = None
     expires_at: datetime | None = None
     model_config = {"from_attributes": True}
+
+
+class OrderCreate(BaseModel):
+    user_id: int = Field(gt=0)
+    plan_id: int = Field(gt=0)
+    idempotency_key: str = Field(min_length=1, max_length=128)
+
+
+class OrderOut(BaseModel):
+    id: int
+    user_id: int
+    plan_id: int
+    plan_name: str
+    days: int
+    traffic_gb: int
+    price: int
+    currency: str
+    status: str
+    subscription_id: int | None
+    created_at: datetime
+    decided_at: datetime | None
+    model_config = {"from_attributes": True}
+
+
+class OrderReceipt(OrderOut):
+    payment_instructions: str
