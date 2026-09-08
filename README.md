@@ -46,3 +46,25 @@ This stack does **not require Node.js**. If an unrelated VPS task still needs No
 ## Secrets
 
 Never commit `.env`, Telegram bot tokens, panel passwords, private keys, or payment gateway secrets.
+
+## Safe MVP admin access and tests
+
+`POST /api/plans` and `POST /api/subscriptions` require `X-Admin-Key`
+matching `APP_SECRET` using constant-time comparison. Missing, incorrect,
+empty, and default development secrets are rejected with HTTP 403.
+Telegram `/admin` and `/grant` accept only sender IDs in the comma-separated
+`TELEGRAM_ADMIN_IDS` allowlist. `/grant` forwards `APP_SECRET` in `X-Admin-Key`.
+The API and bot must use the same secret.
+
+Run the full suite from the repository root with Python 3.12:
+
+```bash
+python -m pip install -r backend/requirements.txt -r bot/requirements.txt
+python -m pytest -q
+```
+
+Tests use a fresh in-memory SQLite database per API test, the mock panel,
+and mocked Telegram/HTTP calls. They do not read `.env`, require credentials,
+or provision real customers. Keep `PANEL_KIND=mock` for local MVP exercises.
+Payment processing is not implemented. Public user and subscription read
+routes still need an authentication/ownership design before customer use.

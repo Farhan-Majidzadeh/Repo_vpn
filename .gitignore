@@ -10,3 +10,10 @@ __pycache__/
 .vscode/
 *.log
 .DS_Store
+.tools/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.pem
+*.key
