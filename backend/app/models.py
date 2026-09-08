@@ -125,3 +125,20 @@ class AuditLog(Base):
     entity_id: Mapped[str] = mapped_column(String(64))
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Order(Base):
+    __tablename__ = "orders"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    plan_id: Mapped[int] = mapped_column(ForeignKey("plans.id"))
+    idempotency_key: Mapped[str] = mapped_column(String(128), unique=True)
+    plan_name: Mapped[str] = mapped_column(String(100))
+    days: Mapped[int] = mapped_column(Integer)
+    traffic_gb: Mapped[int] = mapped_column(Integer)
+    price: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(8))
+    status: Mapped[str] = mapped_column(String(24), default="pending", index=True)
+    subscription_id: Mapped[int | None] = mapped_column(ForeignKey("subscriptions.id"), unique=True, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
