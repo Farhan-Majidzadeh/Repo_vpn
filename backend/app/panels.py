@@ -87,8 +87,13 @@ class MarzbanAdapter(PanelAdapter):
         }
         with httpx.Client(verify=self.verify_tls, timeout=20) as client:
             r = client.post(f"{self.base_url}/api/user", json=payload, headers=headers)
-            r.raise_for_status()
-            data = r.json()
+            if r.status_code == 409:
+                existing = client.get(f"{self.base_url}/api/user/{username}", headers=headers)
+                existing.raise_for_status()
+                data = existing.json()
+            else:
+                r.raise_for_status()
+                data = r.json()
         return ProvisionResult(username=username, subscription_url=data.get("subscription_url"))
 
     def delete_user(self, username: str) -> None:
