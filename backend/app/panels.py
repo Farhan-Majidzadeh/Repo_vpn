@@ -54,7 +54,28 @@ class MarzbanAdapter(PanelAdapter):
         except Exception:
             return False
 
+    def _available_inbounds(self, headers: dict[str, str]) -> dict[str, list[str]]:
+        with httpx.Client(verify=self.verify_tls, timeout=15) as client:
+            r = client.get(f"{self.base_url}/api/inbounds", headers=headers)
+            r.raise_for_status()
+            raw = r.json()
+        result: dict[str, list[str]] = {}
+        for protocol, items in raw.items():
+            tags = []
+            for item in items or []:
+                tag = item.get("tag") if isinstance(item, dict) else str(item)
+                if tag:
+                    tags.append(tag)
+            if tags:
+                result[protocol] = tags
+        return result
+
     def create_user(self, username: str, traffic_bytes: int, expire_at_epoch: int) -> ProvisionResult:
+        headers = self._headers()
+        inbounds = self._available_inbounds(headers)
+        vless_inbounds = inbounds.get("vless", [])
+        if not vless_inbounds:
+            raise RuntimeError("Marzban has no active VLESS inbound")
         payload = {
             "username": username,
             "status": "active",
@@ -62,9 +83,10 @@ class MarzbanAdapter(PanelAdapter):
             "expire": expire_at_epoch,
             "data_limit_reset_strategy": "no_reset",
             "proxies": {"vless": {"flow": "xtls-rprx-vision"}},
+            "inbounds": {"vless": vless_inbounds},
         }
         with httpx.Client(verify=self.verify_tls, timeout=20) as client:
-            r = client.post(f"{self.base_url}/api/user", json=payload, headers=self._headers())
+            r = client.post(f"{self.base_url}/api/user", json=payload, headers=headers)
             r.raise_for_status()
             data = r.json()
         return ProvisionResult(username=username, subscription_url=data.get("subscription_url"))
