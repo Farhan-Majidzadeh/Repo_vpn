@@ -5,12 +5,19 @@ from . import models
 from .panels import get_adapter
 
 
-def create_subscription(db: Session, user: models.User, plan: models.Plan) -> models.Subscription:
+def create_subscription(
+    db: Session,
+    user: models.User,
+    plan: models.Plan,
+    *,
+    commit: bool = True,
+    panel_username: str | None = None,
+) -> models.Subscription:
     if user.is_blacklisted or not user.is_active:
         raise ValueError("user is not eligible")
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=plan.days)
-    panel_username = f"u{user.id}_{secrets.token_hex(4)}"
+    panel_username = panel_username or f"u{user.id}_{secrets.token_hex(4)}"
     traffic = plan.traffic_gb * 1024**3
     result = get_adapter().create_user(panel_username, traffic, int(expires.timestamp()))
     sub = models.Subscription(
@@ -24,6 +31,8 @@ def create_subscription(db: Session, user: models.User, plan: models.Plan) -> mo
         expires_at=expires,
     )
     db.add(sub)
-    db.commit()
-    db.refresh(sub)
+    db.flush()
+    if commit:
+        db.commit()
+        db.refresh(sub)
     return sub
