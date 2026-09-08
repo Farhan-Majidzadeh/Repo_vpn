@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     xui_public_host: str = ""
     xui_public_port: int = 443
 
+    payment_instructions: str = "اطلاعات پرداخت هنوز تنظیم نشده است. قبل از واریز با مدیر تماس بگیرید."
+
     default_currency: str = "IRR"
     healthcheck_interval_seconds: int = 60
 
